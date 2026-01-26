@@ -13,6 +13,7 @@ Preliminary design, experiments, and preparatory work for the Digital Contractin
 ├── gen/              # Goa-generated transport & types (DO NOT EDIT)
 ├── internal
 |   └── datatype/     # Used data types for the application
+│   └── semantic/     # Semantic validation (vocabulary and SHACL constraints)
 │   └── service/      # Application service implementations
 ├── go.mod
 ├── go.sum
@@ -23,6 +24,7 @@ Preliminary design, experiments, and preparatory work for the Digital Contractin
 
 - Go **1.25+**
 - Goa **v3**
+- Apache Jena **5.6.0** (for semantic validation)
 
 ## Setup & Build
 
@@ -49,4 +51,13 @@ go run ./cmd/dcs
 
 ```
 curl http://0.0.0.0:8991/template/search
+```
+
+## Testing
+
+Set the `JENA_HOME` environment variable to your Apache Jena installation path:
+
+```bash
+export JENA_HOME=/path/to/apache-jena-5.6.0
+go test ./internal/semantic/... -v
 ```

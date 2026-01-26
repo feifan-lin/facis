@@ -1,0 +1,16 @@
+[
+  {
+    "conditionType": "invalidConditionType",
+    "parameters": {
+      "startDate": null,
+      "endDate": null
+    }
+  },
+  {
+    "conditionType": "validityPeriod",
+    "parameters": {
+      "startDate": null,
+      "invalidParameter": null
+    }
+  }
+]

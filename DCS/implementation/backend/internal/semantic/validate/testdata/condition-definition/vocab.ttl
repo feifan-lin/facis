@@ -1,0 +1,24 @@
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcs:  <https://projects.eclipse.org/xfsc/facis/dcs#> .
+
+# Base class for semantic conditions
+dcs:SemanticCondition a rdfs:Class .
+
+# Base class for condition properties
+dcs:ConditionProperty a owl:DatatypeProperty .
+
+# Condition Types (instances of SemanticCondition)
+dcs:validityPeriod a dcs:SemanticCondition .
+dcs:paymentTerms a dcs:SemanticCondition .
+dcs:dataAccessScope a dcs:SemanticCondition .
+
+# Properties (instances of ConditionProperty)
+dcs:startDate a dcs:ConditionProperty .
+dcs:endDate a dcs:ConditionProperty .
+dcs:rentAmount a dcs:ConditionProperty .
+dcs:currency a dcs:ConditionProperty .
+dcs:dueDayOfMonth a dcs:ConditionProperty .
+dcs:region a dcs:ConditionProperty .

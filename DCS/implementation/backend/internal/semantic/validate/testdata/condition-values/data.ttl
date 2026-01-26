@@ -1,0 +1,7 @@
+@prefix dcs:  <https://projects.eclipse.org/xfsc/facis/dcs#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+dcs:condition-001
+  a dcs:ValidityPeriod ;
+  dcs:startDate "2024-01-01"^^xsd:date ;
+  dcs:endDate "2024-12-31"^^xsd:date .
