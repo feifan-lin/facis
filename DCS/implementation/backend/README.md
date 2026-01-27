@@ -46,7 +46,7 @@ go mod tidy
 Generate the Goa code under `gen/` after modifying `design/design.go`:
 
 ```
-goa gen design
+goa gen digital-contracting-service/design
 ```
 
 
