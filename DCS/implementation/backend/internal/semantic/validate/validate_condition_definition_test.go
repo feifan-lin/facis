@@ -33,6 +33,12 @@ func TestValidateConditionDefinition(t *testing.T) {
 			wantValid:      false,
 			wantErrorCount: 2, // invalidConditionType and invalidParameter
 		},
+		{
+			name:           "parameter key not allowed for conditionType via dcs:allowedKey",
+			inputFile:      "internal/semantic/validate/testdata/condition-definition/semantic_conditions_invalid_allowed_keys.json",
+			wantValid:      false,
+			wantErrorCount: 1, // currency is a valid property but not allowed for validityPeriod
+		},
 	}
 
 	for _, tt := range tests {

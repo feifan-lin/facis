@@ -1,0 +1,11 @@
+[
+  {
+    "conditionType": "validityPeriod",
+    "parameters": {
+      "startDate": null,
+      "endDate": null,
+      "currency": null
+    }
+  }
+]
+

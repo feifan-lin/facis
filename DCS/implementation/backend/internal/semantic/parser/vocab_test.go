@@ -88,3 +88,42 @@ func TestQueryVocabByClass(t *testing.T) {
 		}
 	}
 }
+
+func TestIsAllowedKeyForCondition(t *testing.T) {
+	vocabResult := loader.LoadTTL("internal/semantic/validate/testdata/condition-definition/vocab.ttl")
+	if vocabResult.Error != nil {
+		t.Fatalf("failed to load vocabulary TTL: %v", vocabResult.Error)
+	}
+
+	// validityPeriod should allow startDate and endDate
+	allowed, err := IsAllowedKeyForCondition(
+		vocabResult.Content,
+		"dcs",
+		"SemanticCondition",
+		"allowedKey",
+		"validityPeriod",
+		[]string{"startDate", "endDate"},
+	)
+	if err != nil {
+		t.Fatalf("IsAllowedKeyForCondition returned error: %v", err)
+	}
+	if !allowed {
+		t.Errorf("expected startDate and endDate to be allowed for validityPeriod")
+	}
+
+	// validityPeriod should NOT allow currency
+	notAllowed, err := IsAllowedKeyForCondition(
+		vocabResult.Content,
+		"dcs",
+		"SemanticCondition",
+		"allowedKey",
+		"validityPeriod",
+		[]string{"startDate", "currency"},
+	)
+	if err != nil {
+		t.Fatalf("IsAllowedKeyForCondition (currency) returned error: %v", err)
+	}
+	if notAllowed {
+		t.Errorf("did not expect currency to be allowed for validityPeriod")
+	}
+}

@@ -8,12 +8,21 @@
 dcs:SemanticCondition a rdfs:Class .
 
 # Base class for condition properties
-dcs:ConditionProperty a owl:DatatypeProperty .
+dcs:ConditionProperty a rdfs:Class .
+
+# Mapping: which keys are allowed for each condition type
+dcs:allowedKey a rdf:Property .
 
 # Condition Types (instances of SemanticCondition)
-dcs:validityPeriod a dcs:SemanticCondition .
-dcs:paymentTerms a dcs:SemanticCondition .
-dcs:dataAccessScope a dcs:SemanticCondition .
+dcs:validityPeriod a dcs:SemanticCondition ;
+  dcs:allowedKey dcs:startDate, dcs:endDate .
+
+dcs:paymentTerms a dcs:SemanticCondition ;
+  dcs:allowedKey dcs:rentAmount, dcs:currency, dcs:dueDayOfMonth .
+
+dcs:dataAccessScope a dcs:SemanticCondition ;
+  dcs:allowedKey dcs:region .
+
 
 # Properties (instances of ConditionProperty)
 dcs:startDate a dcs:ConditionProperty .
