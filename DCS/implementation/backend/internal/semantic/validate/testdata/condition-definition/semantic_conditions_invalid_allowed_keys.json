@@ -1,6 +1,6 @@
 [
   {
-    "conditionType": "validityPeriod",
+    "conditionType": "ValidityPeriod",
     "parameters": {
       "startDate": null,
       "endDate": null,

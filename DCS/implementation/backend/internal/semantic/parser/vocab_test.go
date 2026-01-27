@@ -95,35 +95,35 @@ func TestIsAllowedKeyForCondition(t *testing.T) {
 		t.Fatalf("failed to load vocabulary TTL: %v", vocabResult.Error)
 	}
 
-	// validityPeriod should allow startDate and endDate
+	// ValidityPeriod should allow startDate and endDate
 	allowed, err := IsAllowedKeyForCondition(
 		vocabResult.Content,
 		"dcs",
 		"SemanticCondition",
 		"allowedKey",
-		"validityPeriod",
+		"ValidityPeriod",
 		[]string{"startDate", "endDate"},
 	)
 	if err != nil {
 		t.Fatalf("IsAllowedKeyForCondition returned error: %v", err)
 	}
 	if !allowed {
-		t.Errorf("expected startDate and endDate to be allowed for validityPeriod")
+		t.Errorf("expected startDate and endDate to be allowed for ValidityPeriod")
 	}
 
-	// validityPeriod should NOT allow currency
+	// ValidityPeriod should NOT allow currency (case-sensitive)
 	notAllowed, err := IsAllowedKeyForCondition(
 		vocabResult.Content,
 		"dcs",
 		"SemanticCondition",
 		"allowedKey",
-		"validityPeriod",
+		"ValidityPeriod",
 		[]string{"startDate", "currency"},
 	)
 	if err != nil {
 		t.Fatalf("IsAllowedKeyForCondition (currency) returned error: %v", err)
 	}
 	if notAllowed {
-		t.Errorf("did not expect currency to be allowed for validityPeriod")
+		t.Errorf("did not expect currency to be allowed for ValidityPeriod")
 	}
 }

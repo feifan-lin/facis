@@ -1,13 +1,13 @@
 [
   {
-    "conditionType": "validityPeriod",
+    "conditionType": "ValidityPeriod",
     "parameters": {
       "startDate": null,
       "endDate": null
     }
   },
   {
-    "conditionType": "paymentTerms",
+    "conditionType": "PaymentTerms",
     "parameters": {
       "rentAmount": null,
       "currency": null,
@@ -15,7 +15,7 @@
     }
   },
   {
-    "conditionType": "dataAccessScope",
+    "conditionType": "DataAccessScope",
     "parameters": {
       "region": null
     }

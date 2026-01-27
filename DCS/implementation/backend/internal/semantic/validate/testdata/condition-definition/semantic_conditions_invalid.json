@@ -7,7 +7,7 @@
     }
   },
   {
-    "conditionType": "validityPeriod",
+    "conditionType": "ValidityPeriod",
     "parameters": {
       "startDate": null,
       "invalidParameter": null
