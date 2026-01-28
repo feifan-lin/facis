@@ -15,6 +15,13 @@ func TestValidateConditionDefinition(t *testing.T) {
 	}
 	vocabTTL := vocabResult.Content
 
+	// Load SHACL shapes TTL (defines allowed and required keys per conditionType)
+	shapesResult := loader.LoadTTL("internal/semantic/validate/testdata/condition-values/shapes.ttl")
+	if shapesResult.Error != nil {
+		t.Fatalf("failed to load SHACL shapes TTL: %v", shapesResult.Error)
+	}
+	shapesTTL := shapesResult.Content
+
 	tests := []struct {
 		name           string
 		inputFile      string
@@ -34,7 +41,7 @@ func TestValidateConditionDefinition(t *testing.T) {
 			wantErrorCount: 2, // invalidConditionType and invalidParameter
 		},
 		{
-			name:           "parameter key not allowed for conditionType via dcs:allowedKey",
+			name:           "parameter key not allowed for conditionType according to shapes",
 			inputFile:      "internal/semantic/validate/testdata/condition-definition/semantic_conditions_invalid_allowed_keys.json",
 			wantValid:      false,
 			wantErrorCount: 1, // currency is a valid property but not allowed for validityPeriod
@@ -56,7 +63,7 @@ func TestValidateConditionDefinition(t *testing.T) {
 			}
 
 			// Validate
-			result := ValidateConditionDefinition(conditions, vocabTTL)
+			result := ValidateConditionDefinition(conditions, vocabTTL, shapesTTL)
 
 			// Check validation result
 			if result.Valid != tt.wantValid {

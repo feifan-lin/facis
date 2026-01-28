@@ -3,5 +3,6 @@
 
 dcs:condition-001
   a dcs:ValidityPeriod ;
-  dcs:startDate "2024-01-01"^^xsd:date .
-  # Missing required endDate
+  dcs:startDate "2026-01-01"^^xsd:date ;
+  dcs:endDate "2026-12-31"^^xsd:date .
+

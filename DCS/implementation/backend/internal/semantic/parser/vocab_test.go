@@ -89,41 +89,51 @@ func TestQueryVocabByClass(t *testing.T) {
 	}
 }
 
-func TestIsAllowedKeyForCondition(t *testing.T) {
-	vocabResult := loader.LoadTTL("internal/semantic/validate/testdata/condition-definition/vocab.ttl")
-	if vocabResult.Error != nil {
-		t.Fatalf("failed to load vocabulary TTL: %v", vocabResult.Error)
+func TestBuildConditionShapesFromSHACL(t *testing.T) {
+	// Load SHACL shapes TTL used for condition values.
+	shapesResult := loader.LoadTTL("internal/semantic/validate/testdata/condition-values/shapes.ttl")
+	if shapesResult.Error != nil {
+		t.Fatalf("failed to load shapes.ttl: %v", shapesResult.Error)
 	}
 
-	// ValidityPeriod should allow startDate and endDate
-	allowed, err := IsAllowedKeyForCondition(
-		vocabResult.Content,
-		"dcs",
-		"SemanticCondition",
-		"allowedKey",
-		"ValidityPeriod",
-		[]string{"startDate", "endDate"},
-	)
+	shapes, err := BuildConditionShapesFromSHACL(shapesResult.Content, "dcs")
 	if err != nil {
-		t.Fatalf("IsAllowedKeyForCondition returned error: %v", err)
-	}
-	if !allowed {
-		t.Errorf("expected startDate and endDate to be allowed for ValidityPeriod")
+		t.Fatalf("BuildConditionShapesFromSHACL failed: %v", err)
 	}
 
-	// ValidityPeriod should NOT allow currency (case-sensitive)
-	notAllowed, err := IsAllowedKeyForCondition(
-		vocabResult.Content,
-		"dcs",
-		"SemanticCondition",
-		"allowedKey",
-		"ValidityPeriod",
-		[]string{"startDate", "currency"},
-	)
-	if err != nil {
-		t.Fatalf("IsAllowedKeyForCondition (currency) returned error: %v", err)
+	// Helper to compare expected keys with actual keys in a map[string]struct{}.
+	checkKeys := func(kind, cond string, actual map[string]struct{}, expected []string) {
+		if len(actual) != len(expected) {
+			t.Fatalf("%s keys for %s length mismatch: got %d, want %d (got=%v)",
+				kind, cond, len(actual), len(expected), actual)
+		}
+		for _, k := range expected {
+			if _, ok := actual[k]; !ok {
+				t.Errorf("%s keys for %s missing expected key %q (got=%v)", kind, cond, k, actual)
+			}
+		}
 	}
-	if notAllowed {
-		t.Errorf("did not expect currency to be allowed for ValidityPeriod")
+
+	getShape := func(cond string) ConditionShape {
+		shape, ok := shapes[cond]
+		if !ok {
+			t.Fatalf("expected condition shape for %s", cond)
+		}
+		return shape
 	}
+
+	// ValidityPeriod
+	vShape := getShape("ValidityPeriod")
+	checkKeys("allowed", "ValidityPeriod", vShape.AllowedKeys, []string{"startDate", "endDate"})
+	checkKeys("required", "ValidityPeriod", vShape.RequiredKeys, []string{"startDate"})
+
+	// PaymentTerms
+	pShape := getShape("PaymentTerms")
+	checkKeys("allowed", "PaymentTerms", pShape.AllowedKeys, []string{"rentAmount", "currency", "dueDayOfMonth"})
+	checkKeys("required", "PaymentTerms", pShape.RequiredKeys, []string{"rentAmount", "currency", "dueDayOfMonth"})
+
+	// DataAccessScope
+	dShape := getShape("DataAccessScope")
+	checkKeys("allowed", "DataAccessScope", dShape.AllowedKeys, []string{"region"})
+	checkKeys("required", "DataAccessScope", dShape.RequiredKeys, []string{"region"})
 }

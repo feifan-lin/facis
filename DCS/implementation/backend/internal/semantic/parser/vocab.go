@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"digital-contracting-service/internal/semantic/loader"
@@ -94,11 +95,6 @@ SELECT ?term WHERE {
 //
 // Returns a map of term localNames, or an error if the query fails.
 func QueryVocabByClass(vocabTTL []byte, prefixName, className string) (map[string]struct{}, error) {
-	binPath := loader.GetJenaBinPath()
-	if binPath == "" {
-		return nil, fmt.Errorf("Jena not found, set JENA_HOME environment variable")
-	}
-
 	// Extract prefix IRI from TTL
 	prefixIRI := extractPrefixIRI(vocabTTL, prefixName)
 	if prefixIRI == "" {
@@ -208,94 +204,82 @@ func parseSPARQLTermVariableResults(jsonOutput string) (map[string]struct{}, err
 	return terms, nil
 }
 
-// buildSPARQLPredicateCheckQuery builds a SPARQL query that retrieves all objects
-// related to a specific subject (of a given class) via a given predicate.
+// buildSPARQLConditionShapesQuery builds a SPARQL query that retrieves, for
+// each condition type, the parameter keys defined in SHACL NodeShapes and
+// their optional sh:minCount values.
 //
-// The query includes the following parameters:
-//   - prefixName:          the prefix name (e.g., "dcs")
-//   - prefixIRI:           the IRI for the prefix (e.g., "https://projects.eclipse.org/xfsc/facis/dcs#")
-//   - className:           the class name for the subject (e.g., "SemanticCondition")
-//   - predicateLocalName:  the local name of the predicate (e.g., "allowedKey")
-//   - subjectLocalName:    the local name of the subject term (e.g., "validityPeriod")
+// Parameters:
+//   - prefixName: the prefix name used in the shapes TTL (e.g., "dcs")
+//   - prefixIRI:  the IRI for the prefix (e.g., "https://projects.eclipse.org/xfsc/facis/dcs#")
 //
-// Returns a SPARQL query that selects all objects related to the subject.
-func buildSPARQLPredicateCheckQuery(
-	prefixName,
-	prefixIRI,
-	className,
-	predicateLocalName,
-	subjectLocalName string,
-) string {
-	fullSubjectIRI := prefixIRI + subjectLocalName
-
+// Returns a SPARQL query string that selects, per condition type, each
+// parameter key and its optional minCount.
+func buildSPARQLConditionShapesQuery(prefixName, prefixIRI string) string {
 	return fmt.Sprintf(`
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX sh: <http://www.w3.org/ns/shacl#>
 PREFIX %s: <%s>
 
-SELECT ?object WHERE {
-  ?subject a %s:%s ;
-           %s:%s ?object .
-  FILTER(STR(?subject) = "%s")
+SELECT ?conditionLocal ?keyLocal ?minCount WHERE {
+  ?shape a sh:NodeShape ;
+         sh:targetClass ?cond ;
+         sh:property ?propShape .
+
+  ?propShape sh:path ?prop .
+  OPTIONAL { ?propShape sh:minCount ?minCount . }
+
+  FILTER(STRSTARTS(STR(?cond), STR(%s:)))
+  FILTER(STRSTARTS(STR(?prop), STR(%s:)))
+
+  BIND(STRAFTER(STR(?cond), STR(%s:)) AS ?conditionLocal)
+  BIND(STRAFTER(STR(?prop), STR(%s:)) AS ?keyLocal)
 }
-`, prefixName, prefixIRI, prefixName, className, prefixName, predicateLocalName, fullSubjectIRI)
+`, prefixName, prefixIRI, prefixName, prefixName, prefixName, prefixName)
 }
 
-// IsAllowedKeyForCondition checks whether all given parameter keys are allowed
-// for a given condition type in the vocabulary TTL.
-//
-// Returns true when all keys are allowed, false otherwise.
-func IsAllowedKeyForCondition(
-	vocabTTL []byte,
-	prefixName string,
-	className string,
-	predicateLocalName string,
-	conditionLocalName string,
-	keyLocalNames []string,
-) (bool, error) {
-	binPath := loader.GetJenaBinPath()
-	if binPath == "" {
-		return false, fmt.Errorf("Jena not found, set JENA_HOME environment variable")
-	}
+// ConditionShape captures the parameter key constraints for a semantic
+// condition type as derived from SHACL shapes.
+type ConditionShape struct {
+	AllowedKeys  map[string]struct{} // keys that may appear for this condition type
+	RequiredKeys map[string]struct{} // keys that must appear (minCount >= 1)
+}
 
-	// Extract prefix IRI from TTL
-	prefixIRI := extractPrefixIRI(vocabTTL, prefixName)
+// BuildConditionShapesFromSHACL extracts, for each condition type, the set of
+// defined parameter keys and which of them are required (minCount >= 1) from
+// SHACL NodeShapes.
+func BuildConditionShapesFromSHACL(shapesTTL []byte, prefixName string) (map[string]ConditionShape, error) {
+	// Extract prefix IRI from shapes TTL
+	prefixIRI := extractPrefixIRI(shapesTTL, prefixName)
 	if prefixIRI == "" {
-		return false, fmt.Errorf("prefix %q not found in vocabulary TTL", prefixName)
+		return nil, fmt.Errorf("prefix %q not found in shapes TTL", prefixName)
 	}
 
-	// Create temporary TTL file for vocabulary data
-	dataFile, err := os.CreateTemp("", "vocab-*.ttl")
+	// Create temporary TTL file for shapes data
+	dataFile, err := os.CreateTemp("", "shapes-*.ttl")
 	if err != nil {
-		return false, fmt.Errorf("failed to create temp file: %w", err)
+		return nil, fmt.Errorf("failed to create temp shapes file: %w", err)
 	}
 	defer os.Remove(dataFile.Name())
 	defer dataFile.Close()
 
-	if _, err := dataFile.Write(vocabTTL); err != nil {
-		return false, fmt.Errorf("failed to write temp file: %w", err)
+	if _, err := dataFile.Write(shapesTTL); err != nil {
+		return nil, fmt.Errorf("failed to write shapes file: %w", err)
 	}
 	dataFile.Close()
 
-	// Build SPARQL query to fetch all objects (keys) for the given
-	// (conditionType, predicate) pair.
-	sparqlQuery := buildSPARQLPredicateCheckQuery(
-		prefixName,
-		prefixIRI,
-		className,
-		predicateLocalName,
-		conditionLocalName,
-	)
+	// Build SPARQL query to retrieve, for each condition type, all parameter
+	// paths and their optional sh:minCount values.
+	sparqlQuery := buildSPARQLConditionShapesQuery(prefixName, prefixIRI)
 
 	// Create temporary SPARQL query file
-	queryFile, err := os.CreateTemp("", "allowed-key-check-*.rq")
+	queryFile, err := os.CreateTemp("", "shapes-condition-keys-*.rq")
 	if err != nil {
-		return false, fmt.Errorf("failed to create query file: %w", err)
+		return nil, fmt.Errorf("failed to create shapes query file: %w", err)
 	}
 	defer os.Remove(queryFile.Name())
 	defer queryFile.Close()
 
 	if _, err := queryFile.WriteString(sparqlQuery); err != nil {
-		return false, fmt.Errorf("failed to write query file: %w", err)
+		return nil, fmt.Errorf("failed to write shapes query file: %w", err)
 	}
 	queryFile.Close()
 
@@ -305,69 +289,98 @@ func IsAllowedKeyForCondition(
 		"--query", queryFile.Name(),
 		"--results", "JSON")
 	if err != nil {
-		return false, fmt.Errorf("SPARQL query for allowed key failed: %w", err)
+		return nil, fmt.Errorf("SPARQL query for condition shapes failed: %w", err)
 	}
 
-	// Parse SPARQL JSON results and extract object localNames
-	allowedSet, err := parseSPARQLObjectVariableResults(cmdResult.Stdout)
+	// Parse SPARQL JSON results into ConditionShape map.
+	shapes, err := parseSHACLConditionShapesResults(cmdResult.Stdout)
 	if err != nil {
-		return false, fmt.Errorf("failed to parse SPARQL allowed-key results: %w", err)
+		return nil, err
 	}
 
-	// Ensure all requested keys are present in the allowed set.
-	for _, key := range keyLocalNames {
-		if _, ok := allowedSet[key]; !ok {
-			return false, nil
-		}
-	}
-
-	return true, nil
+	return shapes, nil
 }
 
-// parseSPARQLObjectVariableResults parses SPARQL query results in JSON format and
-// extracts localNames from the "object" variable.
+// parseSHACLConditionShapesResults parses SPARQL query results in JSON format
+// and builds a map of ConditionShape keyed by condition type local name.
+//
+// It expects the JSON output produced by Apache Jena's arq command when
+// executing the query generated by buildSPARQLConditionShapesQuery, where the
+// variables "conditionLocal", "keyLocal", and optional "minCount" are bound.
 //
 // Example JSON format:
 //
 //	{
 //	  "head": {
-//	    "vars": [ "object" ]
+//	    "vars": [ "conditionLocal", "keyLocal", "minCount" ]
 //	  },
 //	  "results": {
 //	    "bindings": [
 //	      {
-//	        "object": {
-//	          "type": "uri",
-//	          "value": "https://projects.eclipse.org/xfsc/facis/dcs#startDate"
-//	        }
+//	        "conditionLocal": { "type": "literal", "value": "ValidityPeriod" },
+//	        "keyLocal":       { "type": "literal", "value": "startDate" },
+//	        "minCount":       { "type": "literal", "value": "1" }
+//	      },
+//	      {
+//	        "conditionLocal": { "type": "literal", "value": "ValidityPeriod" },
+//	        "keyLocal":       { "type": "literal", "value": "endDate" }
+//	        // no minCount binding => treated as optional
 //	      }
 //	    ]
 //	  }
 //	}
 //
-// Returns a map of object localNames.
-func parseSPARQLObjectVariableResults(jsonOutput string) (map[string]struct{}, error) {
+// Returns a populated map of ConditionShape, or an error if JSON parsing fails.
+func parseSHACLConditionShapesResults(jsonOutput string) (map[string]ConditionShape, error) {
 	var jsonResult struct {
 		Results struct {
 			Bindings []struct {
-				Object struct {
+				ConditionLocal struct {
 					Value string `json:"value"`
-				} `json:"object"`
+				} `json:"conditionLocal"`
+				KeyLocal struct {
+					Value string `json:"value"`
+				} `json:"keyLocal"`
+				MinCount *struct {
+					Value string `json:"value"`
+				} `json:"minCount,omitempty"`
 			} `json:"bindings"`
 		} `json:"results"`
 	}
 
 	if err := json.Unmarshal([]byte(jsonOutput), &jsonResult); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal SPARQL JSON results: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal SHACL shapes SPARQL JSON results: %w", err)
 	}
 
-	objects := make(map[string]struct{})
-	for _, binding := range jsonResult.Results.Bindings {
-		localName := LocalName(binding.Object.Value)
-		if localName != "" {
-			objects[localName] = struct{}{}
+	shapes := make(map[string]ConditionShape)
+
+	for _, b := range jsonResult.Results.Bindings {
+		conditionLocal := strings.TrimSpace(b.ConditionLocal.Value)
+		keyLocal := strings.TrimSpace(b.KeyLocal.Value)
+		if conditionLocal == "" || keyLocal == "" {
+			continue
 		}
+
+		shape := shapes[conditionLocal]
+		if shape.AllowedKeys == nil {
+			shape.AllowedKeys = make(map[string]struct{})
+		}
+		if shape.RequiredKeys == nil {
+			shape.RequiredKeys = make(map[string]struct{})
+		}
+
+		// All paths that appear in the shape are considered allowed keys.
+		shape.AllowedKeys[keyLocal] = struct{}{}
+
+		// If minCount is present and >= 1, mark as required.
+		if b.MinCount != nil {
+			if n, err := strconv.Atoi(strings.TrimSpace(b.MinCount.Value)); err == nil && n >= 1 {
+				shape.RequiredKeys[keyLocal] = struct{}{}
+			}
+		}
+
+		shapes[conditionLocal] = shape
 	}
 
-	return objects, nil
+	return shapes, nil
 }

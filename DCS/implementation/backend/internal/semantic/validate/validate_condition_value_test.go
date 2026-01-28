@@ -22,15 +22,22 @@ func TestValidateRDFDataAgainstShapes(t *testing.T) {
 		wantErrors bool // whether we expect errors
 	}{
 		{
-			name:       "valid RDF data with startDate and endDate",
-			dataFile:   "internal/semantic/validate/testdata/condition-values/data.ttl",
+			name:       "valid ValidityPeriod with startDate and endDate",
+			dataFile:   "internal/semantic/validate/testdata/condition-values/validity_period_valid.ttl",
 			shapesFile: "internal/semantic/validate/testdata/condition-values/shapes.ttl",
 			wantValid:  true,
 			wantErrors: false,
 		},
 		{
-			name:       "invalid RDF data missing endDate",
-			dataFile:   "internal/semantic/validate/testdata/condition-values/data_invalid.ttl",
+			name:       "valid ValidityPeriod missing optional endDate",
+			dataFile:   "internal/semantic/validate/testdata/condition-values/validity_period_missing_end_date.ttl",
+			shapesFile: "internal/semantic/validate/testdata/condition-values/shapes.ttl",
+			wantValid:  true,
+			wantErrors: false,
+		},
+		{
+			name:       "invalid ValidityPeriod missing required startDate",
+			dataFile:   "internal/semantic/validate/testdata/condition-values/validity_period_missing_start_date.ttl",
 			shapesFile: "internal/semantic/validate/testdata/condition-values/shapes.ttl",
 			wantValid:  false,
 			wantErrors: true,

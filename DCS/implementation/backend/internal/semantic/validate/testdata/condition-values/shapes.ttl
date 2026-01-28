@@ -13,5 +13,32 @@ dcs:ValidityPeriodShape
   sh:property [
     sh:path dcs:endDate ;
     sh:datatype xsd:date ;
+  ] .
+
+dcs:PaymentTermsShape
+  a sh:NodeShape ;
+  sh:targetClass dcs:PaymentTerms ;
+  sh:property [
+    sh:path dcs:rentAmount ;
+    sh:datatype xsd:decimal ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path dcs:currency ;
+    sh:datatype xsd:string ;
+    sh:minCount 1 ;
+  ] ;
+  sh:property [
+    sh:path dcs:dueDayOfMonth ;
+    sh:datatype xsd:integer ;
+    sh:minCount 1 ;
+  ] .
+
+dcs:DataAccessScopeShape
+  a sh:NodeShape ;
+  sh:targetClass dcs:DataAccessScope ;
+  sh:property [
+    sh:path dcs:region ;
+    sh:datatype xsd:string ;
     sh:minCount 1 ;
   ] .
