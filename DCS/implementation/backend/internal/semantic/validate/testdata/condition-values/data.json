@@ -1,0 +1,23 @@
+[
+  {
+    "conditionType": "ValidityPeriod",
+    "parameters": {
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31"
+    }
+  },
+  {
+    "conditionType": "PaymentTerms",
+    "parameters": {
+      "rentAmount": 1200.50,
+      "currency": "EUR",
+      "dueDayOfMonth": 5
+    }
+  },
+  {
+    "conditionType": "DataAccessScope",
+    "parameters": {
+      "region": "EU"
+    }
+  }
+]

@@ -8,6 +8,7 @@ Preliminary design, experiments, and preparatory work for the Digital Contractin
 ├── cmd/
 │   ├── dcs/          # HTTP API server entrypoint
 │   └── dcs-cli/      # (optional) CLI tooling
+│   └── gen-jsonld-context/         # generates JSON-LD @context from vocab.ttl and shapes.ttl
 ├── design/           # Goa DSL (API contracts)
 │   └── contract_storage_archive.go # Design description for the Contract Storage Archive api
 │   └── contract_workflow_eninge.go # Design description for the Contract Workflow Engine api

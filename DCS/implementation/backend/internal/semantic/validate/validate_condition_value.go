@@ -14,17 +14,17 @@ type ConditionValueValidationResult struct {
 	Errors []string `json:"errors,omitempty"`
 }
 
-// ValidateConditionValues validates RDF data against SHACL shapes.
+// ValidateConditionValues validates JSON-LD data against SHACL shapes.
 //
 // Parameters:
-//   - dataTTL: RDF data in Turtle format
+//   - dataJSONLD: JSON-LD document (e.g. {"@context": ..., "@graph": [...]})
 //   - shapesTTL: SHACL shapes in Turtle format
 //
 // Returns a validation result indicating whether the data conforms to the shapes
 // and any validation errors if found.
-func ValidateConditionValues(dataTTL, shapesTTL []byte) ConditionValueValidationResult {
-	// Create temporary files for data and shapes
-	dataFile, err := os.CreateTemp("", "data-*.ttl")
+func ValidateConditionValues(dataJSONLD, shapesTTL []byte) ConditionValueValidationResult {
+	// Create temporary file for JSON-LD data
+	dataFile, err := os.CreateTemp("", "data-*.jsonld")
 	if err != nil {
 		return ConditionValueValidationResult{
 			Valid:  false,
@@ -35,7 +35,7 @@ func ValidateConditionValues(dataTTL, shapesTTL []byte) ConditionValueValidation
 	defer os.Remove(dataPath)
 	defer dataFile.Close()
 
-	if _, err := dataFile.Write(dataTTL); err != nil {
+	if _, err := dataFile.Write(dataJSONLD); err != nil {
 		return ConditionValueValidationResult{
 			Valid:  false,
 			Errors: []string{fmt.Sprintf("failed to write data file: %v", err)},

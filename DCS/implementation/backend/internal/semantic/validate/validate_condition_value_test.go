@@ -4,65 +4,68 @@ import (
 	"testing"
 
 	"digital-contracting-service/internal/semantic/loader"
+	"digital-contracting-service/internal/semantic/parser"
 )
 
-// TestValidateRDFDataAgainstShapes tests that RDF data (in TTL format) is validated
-// against shapes.ttl using Apache Jena SHACL validation.
-func TestValidateRDFDataAgainstShapes(t *testing.T) {
-	// Check if Jena is available via JENA_HOME environment variable
+// TestValidateConditionValues tests that JSON-LD data is validated
+// against shapes.ttl using Apache Jena SHACL.
+func TestValidateConditionValues(t *testing.T) {
 	if loader.GetJenaBinPath() == "" {
 		t.Skip("Jena not found. Set JENA_HOME environment variable")
 	}
 
+	contextResult := loader.LoadJSON("internal/semantic/validate/testdata/condition-values/context.jsonld")
+	if contextResult.Error != nil {
+		t.Fatalf("failed to load context: %v", contextResult.Error)
+	}
+	contextJSONLD := contextResult.Content
+
+	shapesResult := loader.LoadTTL("internal/semantic/validate/testdata/condition-values/shapes.ttl")
+	if shapesResult.Error != nil {
+		t.Fatalf("failed to load shapes: %v", shapesResult.Error)
+	}
+	shapesTTL := shapesResult.Content
+
 	tests := []struct {
-		name       string
-		dataFile   string
-		shapesFile string
-		wantValid  bool
-		wantErrors bool // whether we expect errors
+		name               string
+		conditionsJSONPath string
+		wantValid          bool
+		wantErrors         bool
 	}{
 		{
-			name:       "valid ValidityPeriod with startDate and endDate",
-			dataFile:   "internal/semantic/validate/testdata/condition-values/validity_period_valid.ttl",
-			shapesFile: "internal/semantic/validate/testdata/condition-values/shapes.ttl",
-			wantValid:  true,
-			wantErrors: false,
+			name:               "valid ValidityPeriod with startDate and endDate",
+			conditionsJSONPath: "internal/semantic/validate/testdata/condition-values/valid_condition.json",
+			wantValid:          true,
+			wantErrors:         false,
 		},
 		{
-			name:       "valid ValidityPeriod missing optional endDate",
-			dataFile:   "internal/semantic/validate/testdata/condition-values/validity_period_missing_end_date.ttl",
-			shapesFile: "internal/semantic/validate/testdata/condition-values/shapes.ttl",
-			wantValid:  true,
-			wantErrors: false,
+			name:               "valid ValidityPeriod missing optional endDate",
+			conditionsJSONPath: "internal/semantic/validate/testdata/condition-values/valid_optional_end_date.json",
+			wantValid:          true,
+			wantErrors:         false,
 		},
 		{
-			name:       "invalid ValidityPeriod missing required startDate",
-			dataFile:   "internal/semantic/validate/testdata/condition-values/validity_period_missing_start_date.ttl",
-			shapesFile: "internal/semantic/validate/testdata/condition-values/shapes.ttl",
-			wantValid:  false,
-			wantErrors: true,
+			name:               "invalid ValidityPeriod missing required startDate",
+			conditionsJSONPath: "internal/semantic/validate/testdata/condition-values/invalid_missing_start_date.json",
+			wantValid:          false,
+			wantErrors:         true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Load data and shapes using loader
-			dataResult := loader.LoadTTL(tt.dataFile)
-			if dataResult.Error != nil {
-				t.Fatalf("failed to load data file: %v", dataResult.Error)
+			conditionsResult := loader.LoadJSON(tt.conditionsJSONPath)
+			if conditionsResult.Error != nil {
+				t.Fatalf("failed to load conditions JSON: %v", conditionsResult.Error)
 			}
-			dataTTL := dataResult.Content
 
-			shapesResult := loader.LoadTTL(tt.shapesFile)
-			if shapesResult.Error != nil {
-				t.Fatalf("failed to load shapes file: %v", shapesResult.Error)
+			jsonldBytes, err := parser.ConvertToJSONLD(conditionsResult.Content, contextJSONLD, "dcs")
+			if err != nil {
+				t.Fatalf("failed to convert to JSON-LD: %v", err)
 			}
-			shapesTTL := shapesResult.Content
 
-			// Perform SHACL validation using Apache Jena
-			result := ValidateConditionValues(dataTTL, shapesTTL)
+			result := ValidateConditionValues(jsonldBytes, shapesTTL)
 
-			// Verify validation result
 			if result.Valid != tt.wantValid {
 				t.Errorf("validation result mismatch: got Valid=%v, want %v", result.Valid, tt.wantValid)
 			}

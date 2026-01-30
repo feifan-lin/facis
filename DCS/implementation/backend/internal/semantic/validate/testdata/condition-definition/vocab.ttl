@@ -10,10 +10,10 @@ dcs:SemanticCondition a rdfs:Class .
 # Base class for condition properties
 dcs:ConditionProperty a rdfs:Class .
 
-# Condition Types (instances of SemanticCondition)
-dcs:ValidityPeriod a dcs:SemanticCondition .
-dcs:PaymentTerms a dcs:SemanticCondition .
-dcs:DataAccessScope a dcs:SemanticCondition .
+# Condition types: classes (for SHACL / rdf:type) and instances of SemanticCondition (vocabulary enumeration)
+dcs:ValidityPeriod   a rdfs:Class, dcs:SemanticCondition .
+dcs:PaymentTerms     a rdfs:Class, dcs:SemanticCondition .
+dcs:DataAccessScope  a rdfs:Class, dcs:SemanticCondition .
 
 # Properties (instances of ConditionProperty)
 dcs:startDate a dcs:ConditionProperty .

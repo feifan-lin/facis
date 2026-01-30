@@ -1,0 +1,42 @@
+{
+  "@context": {
+    "DataAccessScope": "dcs:DataAccessScope",
+    "PaymentTerms": "dcs:PaymentTerms",
+    "ValidityPeriod": "dcs:ValidityPeriod",
+    "conditionType": "@type",
+    "currency": {
+      "@id": "dcs:currency",
+      "@nest": "parameters",
+      "@type": "http://www.w3.org/2001/XMLSchema#string"
+    },
+    "dcs": "https://projects.eclipse.org/xfsc/facis/dcs#",
+    "dueDayOfMonth": {
+      "@id": "dcs:dueDayOfMonth",
+      "@nest": "parameters",
+      "@type": "http://www.w3.org/2001/XMLSchema#integer"
+    },
+    "endDate": {
+      "@id": "dcs:endDate",
+      "@nest": "parameters",
+      "@type": "http://www.w3.org/2001/XMLSchema#date"
+    },
+    "id": "@id",
+    "parameters": "@nest",
+    "region": {
+      "@id": "dcs:region",
+      "@nest": "parameters",
+      "@type": "http://www.w3.org/2001/XMLSchema#string"
+    },
+    "rentAmount": {
+      "@id": "dcs:rentAmount",
+      "@nest": "parameters",
+      "@type": "http://www.w3.org/2001/XMLSchema#decimal"
+    },
+    "startDate": {
+      "@id": "dcs:startDate",
+      "@nest": "parameters",
+      "@type": "http://www.w3.org/2001/XMLSchema#date"
+    },
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  }
+}
