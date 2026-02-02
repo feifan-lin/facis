@@ -8,9 +8,10 @@ import (
 	"digital-contracting-service/internal/semantic/loader"
 )
 
-// BuildJSONLDContext builds a JSON-LD @context object from vocabulary and SHACL shapes TTL files.
+// BuildConditionJSONLDContext builds a JSON-LD @context for semantic conditions
+// from vocabulary and SHACL shapes TTL files.
 //
-// It uses vocab.ttl to discover semantic condition types and condition properties, and shapes.ttl
+// It uses vocab.ttl to discover condition types and properties, and shapes.ttl
 // to derive property datatypes. The result is a Go map representing the @context section,
 // which callers can embed into a JSON-LD document or serialize independently.
 //
@@ -20,7 +21,7 @@ import (
 //   - prefixName: the prefix name (e.g., "dcs")
 //
 // Returns a map representing the @context, or an error if construction fails.
-func BuildJSONLDContext(vocabTTL, shapesTTL []byte, prefixName string) (map[string]interface{}, error) {
+func BuildConditionJSONLDContext(vocabTTL, shapesTTL []byte, prefixName string) (map[string]interface{}, error) {
 	prefixIRI := extractPrefixIRI(vocabTTL, prefixName)
 	if prefixIRI == "" {
 		return nil, fmt.Errorf("prefix %q not found in vocabulary TTL", prefixName)
@@ -32,8 +33,8 @@ func BuildJSONLDContext(vocabTTL, shapesTTL []byte, prefixName string) (map[stri
 	context["dcs"] = prefixIRI
 	context["xsd"] = "http://www.w3.org/2001/XMLSchema#"
 
-	// Map id and conditionType
-	context["id"] = "@id"
+	// Map conditionId and conditionType
+	context["conditionId"] = "@id"
 	context["conditionType"] = "@type"
 
 	// Query condition types from vocab.ttl
@@ -304,9 +305,9 @@ func ConvertToJSONLD(conditionsJSON, contextJSONLD []byte, prefixName string) ([
 func convertConditionToJSONLD(condition map[string]interface{}, prefixName, prefixIRI string) (map[string]interface{}, error) {
 	result := make(map[string]interface{})
 
-	// Handle ID if present
-	if id, ok := condition["id"].(string); ok && id != "" {
-		result["id"] = fmt.Sprintf("%s:%s", prefixName, id)
+	// Handle identifier
+	if s, ok := condition["conditionId"].(string); ok && s != "" {
+		result["conditionId"] = fmt.Sprintf("%s:%s", prefixName, s)
 	}
 
 	// Convert conditionType to @type (case-sensitive, must match vocab.ttl)

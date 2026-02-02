@@ -1,5 +1,6 @@
 [
   {
+    "conditionId": "055527d9-b7b2-40c6-baf5-4cf64c12cf04",
     "conditionType": "ValidityPeriod",
     "parameters": {
       "startDate": "2026-01-01",

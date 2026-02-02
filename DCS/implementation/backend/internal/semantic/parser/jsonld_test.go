@@ -6,10 +6,10 @@ import (
 	"digital-contracting-service/internal/semantic/loader"
 )
 
-// TestBuildJSONLDContext verifies that @context can be generated solely from
+// TestBuildConditionJSONLDContext verifies that @context can be generated solely from
 // vocab.ttl and shapes.ttl and that key mappings are as expected. Value
 // conversion (@graph) is tested separately.
-func TestBuildJSONLDContext(t *testing.T) {
+func TestBuildConditionJSONLDContext(t *testing.T) {
 	// Load vocabulary TTL
 	vocabResult := loader.LoadTTL("internal/semantic/validate/testdata/condition-definition/vocab.ttl")
 	if vocabResult.Error != nil {
@@ -23,10 +23,10 @@ func TestBuildJSONLDContext(t *testing.T) {
 	}
 
 	// Build @context only (no values) from vocab & shapes.
-	context, err := BuildJSONLDContext(vocabResult.Content, shapesResult.Content, "dcs")
+	context, err := BuildConditionJSONLDContext(vocabResult.Content, shapesResult.Content, "dcs")
 
 	if err != nil {
-		t.Fatalf("BuildJSONLDContext failed: %v", err)
+		t.Fatalf("BuildConditionJSONLDContext failed: %v", err)
 	}
 
 	// Verify prefix definitions
@@ -39,8 +39,8 @@ func TestBuildJSONLDContext(t *testing.T) {
 	}
 
 	// Verify id and conditionType mappings
-	if idMapping, ok := context["id"].(string); !ok || idMapping != "@id" {
-		t.Error("@context missing or incorrect id mapping")
+	if conditionIdMapping, ok := context["conditionId"].(string); !ok || conditionIdMapping != "@id" {
+		t.Error("@context missing or incorrect conditionId mapping to @id")
 	}
 
 	if condTypeMapping, ok := context["conditionType"].(string); !ok || condTypeMapping != "@type" {

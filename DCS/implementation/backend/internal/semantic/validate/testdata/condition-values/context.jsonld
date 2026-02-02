@@ -3,6 +3,7 @@
     "DataAccessScope": "dcs:DataAccessScope",
     "PaymentTerms": "dcs:PaymentTerms",
     "ValidityPeriod": "dcs:ValidityPeriod",
+    "conditionId": "@id",
     "conditionType": "@type",
     "currency": {
       "@id": "dcs:currency",
@@ -20,7 +21,6 @@
       "@nest": "parameters",
       "@type": "http://www.w3.org/2001/XMLSchema#date"
     },
-    "id": "@id",
     "parameters": "@nest",
     "region": {
       "@id": "dcs:region",

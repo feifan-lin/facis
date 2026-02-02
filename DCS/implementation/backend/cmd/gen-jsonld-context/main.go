@@ -45,7 +45,7 @@ func main() {
 	}
 
 	// Build context map
-	ctx, err := parser.BuildJSONLDContext(vocabResult.Content, shapesResult.Content, *prefixName)
+	ctx, err := parser.BuildConditionJSONLDContext(vocabResult.Content, shapesResult.Content, *prefixName)
 	if err != nil {
 		log.Fatalf("failed to build JSON-LD context: %v", err)
 	}

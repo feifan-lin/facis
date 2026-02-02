@@ -15,7 +15,7 @@ type ConditionDefinitionResult struct {
 // SemanticCondition represents a single semantic condition with its type and parameters.
 // This matches the structure in contract template's semantic_conditions array.
 type SemanticCondition struct {
-	ID            *string                `json:"id,omitempty"`
+	ConditionId   *string                `json:"conditionId"`
 	ConditionType string                 `json:"conditionType"`
 	Parameters    map[string]interface{} `json:"parameters"`
 }

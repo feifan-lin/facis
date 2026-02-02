@@ -1,5 +1,6 @@
 [
   {
+    "conditionId": "1670ab0d-74d0-4547-a90d-0d629f9ddd53",
     "conditionType": "ValidityPeriod",
     "parameters": {}
   }

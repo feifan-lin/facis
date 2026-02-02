@@ -5,6 +5,7 @@
 dcs:ValidityPeriodShape
   a sh:NodeShape ;
   sh:targetClass dcs:ValidityPeriod ;
+  sh:nodeKind sh:IRI ;
   sh:property [
     sh:path dcs:startDate ;
     sh:datatype xsd:date ;
@@ -18,6 +19,7 @@ dcs:ValidityPeriodShape
 dcs:PaymentTermsShape
   a sh:NodeShape ;
   sh:targetClass dcs:PaymentTerms ;
+  sh:nodeKind sh:IRI ;
   sh:property [
     sh:path dcs:rentAmount ;
     sh:datatype xsd:decimal ;
@@ -37,6 +39,7 @@ dcs:PaymentTermsShape
 dcs:DataAccessScopeShape
   a sh:NodeShape ;
   sh:targetClass dcs:DataAccessScope ;
+  sh:nodeKind sh:IRI ;
   sh:property [
     sh:path dcs:region ;
     sh:datatype xsd:string ;
